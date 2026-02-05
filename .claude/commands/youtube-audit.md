@@ -16,6 +16,10 @@ Avant de commencer, rappelle le contexte :
 - **Émotions cibles** : Moins largué, Excité/Motivé, Autonome/Capable
 - **Actions cibles** : Tester l'outil, Automatiser un process
 
+## RÈGLE CRITIQUE : Validation entre chaque étape
+
+**Tu DOIS utiliser l'outil `AskUserQuestion` entre chaque étape pour obtenir la validation de l'utilisateur AVANT de passer à l'étape suivante.** Ne passe JAMAIS à l'étape suivante sans avoir reçu une réponse explicite de l'utilisateur.
+
 ## Workflow en 3 étapes
 
 ### Étape 1 : Brainstorm de titres
@@ -25,12 +29,32 @@ Agis comme le **title-ideator**. Pour le sujet "$ARGUMENTS" :
 3. **Cible principalement "Le Curieux Pressé"** — titres clairs, promesse de résultat rapide
 4. Pour les 3 meilleurs titres, propose 3 concepts de thumbnail complémentaires (pas redondants avec le titre)
 
+**⏸️ STOP — Utilise `AskUserQuestion` pour demander à l'utilisateur :**
+- Quel(s) titre(s) il préfère parmi les propositions
+- S'il veut des modifications ou de nouvelles variantes
+- Si on peut passer à la structuration du contenu
+- Propose les 3 meilleurs titres comme options + "Autre" pour qu'il puisse préciser
+
+**ATTENDS la réponse avant de continuer. Si l'utilisateur demande des modifications, itère sur l'étape 1 jusqu'à ce qu'il valide.**
+
+---
+
 ### Étape 2 : Structure du contenu
-Agis comme le **content-structurer**. Pour le meilleur titre identifié :
+Agis comme le **content-structurer**. Pour le titre validé par l'utilisateur :
 1. Conçois le cold open (7s confirm + 20s personal + 10s new loop)
 2. Structure le contenu en blocs Q&A avec open loops
 3. Identifie les moments de rehook
 4. Assure-toi qu'il y a toujours au moins une question ouverte
+
+**⏸️ STOP — Utilise `AskUserQuestion` pour demander à l'utilisateur :**
+- Si la structure lui convient
+- S'il veut modifier le cold open, les blocs ou les rehooks
+- Si on peut passer à la review du packaging
+- Propose des options : "Valider et passer à la review", "Modifier le cold open", "Modifier la structure", "Recommencer"
+
+**ATTENDS la réponse avant de continuer. Si l'utilisateur demande des modifications, itère sur l'étape 2 jusqu'à ce qu'il valide.**
+
+---
 
 ### Étape 3 : Review du packaging
 Agis comme le **packaging-reviewer**. Évalue le packaging final :
@@ -47,3 +71,4 @@ Agis comme le **packaging-reviewer**. Évalue le packaging final :
 - Sois exigeant et honnête dans la review
 - Propose des variantes améliorées si le score est inférieur à 7/10 sur un critère
 - Le livrable final doit être un document actionnable prêt à l'emploi
+- **RAPPEL : tu DOIS poser des questions et attendre la validation entre chaque étape**

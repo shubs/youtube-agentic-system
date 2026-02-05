@@ -1,8 +1,8 @@
 ---
-description: "Audit YouTube complet : brainstorm titres → structure contenu → review packaging"
+description: "Audit YouTube complet : recherche concurrentielle → brainstorm titres → structure contenu → review packaging"
 ---
 
-# YouTube Audit Complet
+# YouTube Audit Complet — Orchestrateur Multi-Agents
 
 Lance un workflow complet d'audit YouTube pour le sujet : **$ARGUMENTS**
 
@@ -16,59 +16,173 @@ Avant de commencer, rappelle le contexte :
 - **Émotions cibles** : Moins largué, Excité/Motivé, Autonome/Capable
 - **Actions cibles** : Tester l'outil, Automatiser un process
 
-## RÈGLE CRITIQUE : Validation entre chaque étape
+---
 
-**Tu DOIS utiliser l'outil `AskUserQuestion` entre chaque étape pour obtenir la validation de l'utilisateur AVANT de passer à l'étape suivante.** Ne passe JAMAIS à l'étape suivante sans avoir reçu une réponse explicite de l'utilisateur.
+## RÈGLES D'ORCHESTRATION
 
-## Workflow en 3 étapes
+Tu es l'**orchestrateur**. Tu ne fais PAS le travail toi-même. Tu délègues chaque étape à un subagent spécialisé via l'outil `Task` avec `subagent_type: general-purpose`.
 
-### Étape 1 : Brainstorm de titres
-Agis comme le **title-ideator**. Pour le sujet "$ARGUMENTS" :
-1. **Utilise le framework IEA du contexte créateur** — adapte-le au sujet spécifique
-2. Génère au minimum 10 titres en utilisant les frameworks : curiosity gap, versus, liste incomplète, histoire incomplète, curiosité contre-intuitive, format template
-3. **Cible principalement "Le Curieux Pressé"** — titres clairs, promesse de résultat rapide
-4. Pour les 3 meilleurs titres, propose 3 concepts de thumbnail complémentaires (pas redondants avec le titre)
+### Principes fondamentaux :
+1. **Chaque étape = un subagent `Task`** avec un prompt dédié
+2. **Chaque subagent DOIT lire** ses fichiers d'instructions (agent .md + bible + contexte)
+3. **Chaque subagent DOIT sauvegarder** son output dans un fichier markdown
+4. **Le subagent suivant DOIT lire** le fichier de l'étape précédente
+5. **Validation utilisateur** via `AskUserQuestion` entre chaque étape
+6. **Si l'utilisateur veut itérer**, relance le subagent avec les ajustements demandés
+7. **Tout en français**, exigeant et honnête
 
-**⏸️ STOP — Utilise `AskUserQuestion` pour demander à l'utilisateur :**
-- Quel(s) titre(s) il préfère parmi les propositions
-- S'il veut des modifications ou de nouvelles variantes
-- Si on peut passer à la structuration du contenu
-- Propose les 3 meilleurs titres comme options + "Autre" pour qu'il puisse préciser
-
-**ATTENDS la réponse avant de continuer. Si l'utilisateur demande des modifications, itère sur l'étape 1 jusqu'à ce qu'il valide.**
+### Dossier de sortie :
+Crée le dossier `output/audit-$ARGUMENTS/` (remplace les espaces par des tirets) au tout début via l'outil `Bash` avec `mkdir -p`.
 
 ---
 
-### Étape 2 : Structure du contenu
-Agis comme le **content-structurer**. Pour le titre validé par l'utilisateur :
-1. Conçois le cold open (7s confirm + 20s personal + 10s new loop)
-2. Structure le contenu en blocs Q&A avec open loops
-3. Identifie les moments de rehook
-4. Assure-toi qu'il y a toujours au moins une question ouverte
+## ÉTAPE 0 : Recherche concurrentielle
 
-**⏸️ STOP — Utilise `AskUserQuestion` pour demander à l'utilisateur :**
-- Si la structure lui convient
-- S'il veut modifier le cold open, les blocs ou les rehooks
-- Si on peut passer à la review du packaging
-- Propose des options : "Valider et passer à la review", "Modifier le cold open", "Modifier la structure", "Recommencer"
+Lance un subagent `Task` avec le prompt suivant :
 
-**ATTENDS la réponse avant de continuer. Si l'utilisateur demande des modifications, itère sur l'étape 2 jusqu'à ce qu'il valide.**
+```
+Tu es un analyste de marché YouTube.
+
+1. Lis les fichiers suivants pour tes instructions et ton contexte :
+   - .claude/agents/niche-auditor.md (tes instructions détaillées)
+   - .claude/youtube-strategy-bible.md (ta base de connaissances)
+   - .claude/contexte-createur.md (le profil du créateur)
+
+2. Fais un audit du sujet "$ARGUMENTS" sur YouTube FR et EN :
+   - Recherche les top vidéos existantes (utilise WebSearch pour chercher sur YouTube)
+   - Analyse les patterns de titres et thumbnails
+   - Identifie les gaps et opportunités
+   - Estime le TAM (Total Addressable Market)
+
+3. Sauvegarde ton analyse complète dans output/audit-$ARGUMENTS/00-recherche.md
+   Utilise l'outil Write pour créer le fichier.
+
+4. Termine en résumant les 3 insights principaux.
+
+Tout en français.
+```
+
+**Après le subagent :** Lis `output/audit-$ARGUMENTS/00-recherche.md` et présente un résumé des insights à l'utilisateur.
+
+**⏸️ AskUserQuestion** avec les options :
+- "Continuer vers le brainstorm titres" (Recommended)
+- "Approfondir la recherche"
+- "Modifier le focus"
+
+Si l'utilisateur veut itérer, relance le subagent avec les ajustements. Sinon, passe à l'étape 1.
 
 ---
 
-### Étape 3 : Review du packaging
-Agis comme le **packaging-reviewer**. Évalue le packaging final :
-1. Score le curiosity gap (sur 10)
-2. Score la complémentarité titre/thumbnail (sur 10)
-3. Score la valeur en un coup d'œil (sur 10)
-4. Score le "familier mais différent" (sur 10)
-5. Score les 30 premières secondes (sur 10)
-6. Score le test du "scroll stop" (sur 10)
-7. Donne un diagnostic et des suggestions d'amélioration
+## ÉTAPE 1 : Brainstorm titres
 
-## Instructions
-- Tout le contenu doit être **en français**
-- Sois exigeant et honnête dans la review
-- Propose des variantes améliorées si le score est inférieur à 7/10 sur un critère
-- Le livrable final doit être un document actionnable prêt à l'emploi
-- **RAPPEL : tu DOIS poser des questions et attendre la validation entre chaque étape**
+Lance un subagent `Task` avec le prompt suivant :
+
+```
+Tu es un expert en packaging YouTube.
+
+1. Lis les fichiers suivants :
+   - .claude/agents/title-ideator.md (tes instructions détaillées)
+   - .claude/youtube-strategy-bible.md (ta base de connaissances)
+   - .claude/contexte-createur.md (le profil du créateur)
+   - output/audit-$ARGUMENTS/00-recherche.md (la recherche concurrentielle)
+
+2. En t'appuyant sur la recherche concurrentielle, génère 10+ titres
+   pour "$ARGUMENTS" en utilisant les frameworks du title-ideator :
+   curiosity gap, versus, liste incomplète, histoire incomplète,
+   curiosité contre-intuitive, format template.
+
+3. Pour les 3 meilleurs titres, propose 3 concepts de thumbnail
+   complémentaires (pas redondants avec le titre).
+
+4. Sauvegarde dans output/audit-$ARGUMENTS/01-titres.md
+   Utilise l'outil Write pour créer le fichier.
+
+Tout en français.
+```
+
+**Après le subagent :** Lis `output/audit-$ARGUMENTS/01-titres.md` et présente les 3 meilleurs titres à l'utilisateur.
+
+**⏸️ AskUserQuestion** avec comme options les 3 meilleurs titres extraits du fichier + "Nouvelles variantes".
+
+Si l'utilisateur veut itérer, relance le subagent en précisant les ajustements. Sinon, note le titre choisi et passe à l'étape 2.
+
+---
+
+## ÉTAPE 2 : Structure du contenu
+
+Lance un subagent `Task` avec le prompt suivant :
+
+```
+Tu es un expert en storytelling YouTube.
+
+1. Lis les fichiers suivants :
+   - .claude/agents/content-structurer.md (tes instructions détaillées)
+   - .claude/youtube-strategy-bible.md (ta base de connaissances)
+   - .claude/contexte-createur.md (le profil du créateur)
+   - output/audit-$ARGUMENTS/01-titres.md (le titre et thumbnail validés)
+
+2. Structure le contenu pour le titre validé par l'utilisateur :
+   - Cold open en 3 phases (7s confirm + 20s personal + 10s new loop)
+   - Blocs Q&A avec open loops
+   - Rehooks aux moments clés
+   - Q&A tracker (toujours au moins une question ouverte)
+
+3. Sauvegarde dans output/audit-$ARGUMENTS/02-structure.md
+   Utilise l'outil Write pour créer le fichier.
+
+Tout en français.
+```
+
+**Après le subagent :** Lis `output/audit-$ARGUMENTS/02-structure.md` et présente un résumé de la structure à l'utilisateur.
+
+**⏸️ AskUserQuestion** avec les options :
+- "Valider et passer à la review" (Recommended)
+- "Modifier le cold open"
+- "Modifier la structure"
+- "Recommencer"
+
+Si l'utilisateur veut itérer, relance le subagent avec les ajustements. Sinon, passe à l'étape 3.
+
+---
+
+## ÉTAPE 3 : Review du packaging
+
+Lance un subagent `Task` avec le prompt suivant :
+
+```
+Tu es un reviewer exigeant du packaging YouTube.
+
+1. Lis les fichiers suivants :
+   - .claude/agents/packaging-reviewer.md (tes instructions détaillées)
+   - .claude/youtube-strategy-bible.md (ta base de connaissances)
+   - .claude/contexte-createur.md (le profil du créateur)
+   - output/audit-$ARGUMENTS/01-titres.md (titres et thumbnails)
+   - output/audit-$ARGUMENTS/02-structure.md (structure du contenu)
+
+2. Évalue le packaging complet sur les 6 dimensions :
+   - Curiosity gap (sur 10)
+   - Complémentarité titre/thumbnail (sur 10)
+   - Valeur en un coup d'œil (sur 10)
+   - "Familier mais différent" (sur 10)
+   - Les 30 premières secondes (sur 10)
+   - Test du "scroll stop" (sur 10)
+
+3. Donne un diagnostic honnête et des suggestions d'amélioration.
+   Propose des variantes améliorées si un score est < 7/10.
+
+4. Sauvegarde dans output/audit-$ARGUMENTS/03-review.md
+   Utilise l'outil Write pour créer le fichier.
+
+Tout en français. Sois direct et honnête.
+```
+
+**Après le subagent :** Lis `output/audit-$ARGUMENTS/03-review.md` et présente le diagnostic final à l'utilisateur.
+
+---
+
+## Instructions globales
+- **Tout le contenu doit être en français**
+- Sois exigeant et honnête dans chaque étape
+- Le livrable final = un dossier `output/audit-$ARGUMENTS/` avec 4 fichiers markdown structurés et actionnables
+- **RAPPEL : tu DOIS utiliser `AskUserQuestion` et attendre la validation entre chaque étape**
+- Si un subagent échoue ou produit un résultat insuffisant, relance-le avec un prompt ajusté
